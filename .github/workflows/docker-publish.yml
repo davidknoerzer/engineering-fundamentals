@@ -96,10 +96,10 @@ jobs:
 
       - name: Build the Docker image
         run: |
-          docker build -t lrengineering.azurecr.io/ipt-spins:${{ steps.versioning.outputs.full_tag }} -t lrengineering.azurecr.io/ipt-spins:latest .
+          docker build -t dkolreng.azurecr.io/ipt-spins:${{ steps.versioning.outputs.full_tag }} -t dkolreng.azurecr.io/ipt-spins:latest .
 
       # TASK B.3 - Push the docker images to the ACR
       - name: Push the Docker image to ACR
         run: |
-          docker push lrengineering.azurecr.io/ipt-spins:${{ steps.versioning.outputs.full_tag }}
-          docker push lrengineering.azurecr.io/ipt-spins:latest
+          docker push dkolreng.azurecr.io/ipt-spins:${{ steps.versioning.outputs.full_tag }}
+          docker push dkolreng.azurecr.io/ipt-spins:latest
