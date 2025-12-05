@@ -24,8 +24,8 @@ jobs:
       - name: SonarCloud Scan
         run: echo "** TASK D.1 - Replace this step with your SonarCloud analysis command (using SonarSource/sonarcloud-github-action@v2.2.0) **"
         # Hints:
-          # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Provided by GitHub Actions
-          # SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # Needs to be created in your SonarCloud Account and stored in your github repository secrets
+          # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           # -Dsonar.projectKey=<your-project-key>
           # -Dsonar.organization=<your-private-sonarcloud-organization>
           # -Dsonar.sources=.
@@ -37,9 +37,16 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      - name: execute the unit test
-        run: echo "** TASK A - Add the necessary steps such that the unit test is executed on every merge request or pull request on the main branch."
+      # TASK A Implementation:
+      # Assuming Go application. If Node.js, use actions/setup-node and npm test.
+      # If Java, use actions/setup-java and mvn test.
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21' 
 
+      - name: Execute unit tests
+        run: go test -v ./... 
 
   publish-docker-image:
     needs: test
@@ -56,12 +63,12 @@ jobs:
 
       - name: Log in to Azure Container Registry
         run: echo "** TASK B.1 - Log in to Azure Container Registry using admin credentials **"
+        # implementation hint: uses: azure/docker-login@v1
 
       - name: Generate and Push Git Tag for New Version
         id: versioning
         run: |
-          echo "** TASK B.2 - Generate a new Git tag for the Docker image version. Start with version v0.1 resp. increment existing git tag by 0.1. **"
-          echo "Publish the git tag to the remote repository and store it as an output for subsequent steps. (hint: use GITHUB_OUTPUT)"
+          echo "** TASK B.2 - Generate a new Git tag for the Docker image version. **"
           echo "full_tag=default.tag" >> "$GITHUB_OUTPUT"
 
       - name: Build the Docker image
