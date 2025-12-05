@@ -1,0 +1,72 @@
+name: Build and Push Docker Image
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+  push:
+    branches:
+      - main
+
+jobs:
+  code-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: SonarCloud Scan
+        run: echo "** TASK D.1 - Replace this step with your SonarCloud analysis command (using SonarSource/sonarcloud-github-action@v2.2.0) **"
+        # Hints:
+          # GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Provided by GitHub Actions
+          # SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # Needs to be created in your SonarCloud Account and stored in your github repository secrets
+          # -Dsonar.projectKey=<your-project-key>
+          # -Dsonar.organization=<your-private-sonarcloud-organization>
+          # -Dsonar.sources=.
+
+  test:
+    needs: code-analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: execute the unit test
+        run: echo "** TASK A - Add the necessary steps such that the unit test is executed on every merge request or pull request on the main branch."
+
+
+  publish-docker-image:
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log in to Azure Container Registry
+        run: echo "** TASK B.1 - Log in to Azure Container Registry using admin credentials **"
+
+      - name: Generate and Push Git Tag for New Version
+        id: versioning
+        run: |
+          echo "** TASK B.2 - Generate a new Git tag for the Docker image version. Start with version v0.1 resp. increment existing git tag by 0.1. **"
+          echo "Publish the git tag to the remote repository and store it as an output for subsequent steps. (hint: use GITHUB_OUTPUT)"
+          echo "full_tag=default.tag" >> "$GITHUB_OUTPUT"
+
+      - name: Build the Docker image
+        run: |
+          docker build -t lrengineering.azurecr.io/ipt-spins:${{ steps.versioning.outputs.full_tag }} -t lrengineering.azurecr.io/ipt-spins:latest .
+
+      - name: Push the Docker image to ACR
+        run: echo "** TASK B.3 - Push the docker images to the ACR **"
