@@ -46,11 +46,9 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        # 'npm ci' is recommended for CI pipelines instead of 'npm install'
         run: npm ci
 
       - name: Execute unit tests
-        # CI=true ensures the test runner exits after running tests (prevents watch mode)
         env:
           CI: true
         run: npm test
@@ -68,19 +66,40 @@ jobs:
           fetch-tags: true
           token: ${{ secrets.GITHUB_TOKEN }}
 
+      # TASK B.1 - Log in to Azure Container Registry
       - name: Log in to Azure Container Registry
-        run: echo "** TASK B.1 - Log in to Azure Container Registry using admin credentials **"
-        # implementation hint: uses: azure/docker-login@v1
+        uses: azure/docker-login@v1
+        with:
+          login-server: lrengineering.azurecr.io
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
 
+      # TASK B.2 - Generate a new Git tag for the Docker image version
       - name: Generate and Push Git Tag for New Version
         id: versioning
         run: |
-          echo "** TASK B.2 - Generate a new Git tag for the Docker image version. **"
-          echo "full_tag=default.tag" >> "$GITHUB_OUTPUT"
+          # 1. Configure git user for the runner
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "GitHub Actions"
+          
+          # 2. Generate a unique tag based on Date/Time (e.g., v2024.05.01.1200)
+          # This ensures uniqueness without needing complex SemVer logic in bash
+          NEW_TAG="v$(date +'%Y.%m.%d.%H%M')"
+          echo "Generated Tag: $NEW_TAG"
+          
+          # 3. Create and push the tag to the repo
+          git tag $NEW_TAG
+          git push origin $NEW_TAG
+          
+          # 4. Output the tag variable for the next step
+          echo "full_tag=$NEW_TAG" >> "$GITHUB_OUTPUT"
 
       - name: Build the Docker image
         run: |
           docker build -t lrengineering.azurecr.io/ipt-spins:${{ steps.versioning.outputs.full_tag }} -t lrengineering.azurecr.io/ipt-spins:latest .
 
+      # TASK B.3 - Push the docker images to the ACR
       - name: Push the Docker image to ACR
-        run: echo "** TASK B.3 - Push the docker images to the ACR **"
+        run: |
+          docker push lrengineering.azurecr.io/ipt-spins:${{ steps.versioning.outputs.full_tag }}
+          docker push lrengineering.azurecr.io/ipt-spins:latest
