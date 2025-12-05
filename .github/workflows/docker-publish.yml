@@ -37,16 +37,23 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v4
 
-      # TASK A Implementation:
-      # Assuming Go application. If Node.js, use actions/setup-node and npm test.
-      # If Java, use actions/setup-java and mvn test.
-      - name: Set up Go
-        uses: actions/setup-go@v4
+      # TASK A - Add the necessary steps such that the unit test is executed
+      # Configured for React (Node.js) application
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          go-version: '1.21' 
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        # 'npm ci' is recommended for CI pipelines instead of 'npm install'
+        run: npm ci
 
       - name: Execute unit tests
-        run: go test -v ./... 
+        # CI=true ensures the test runner exits after running tests (prevents watch mode)
+        env:
+          CI: true
+        run: npm test
 
   publish-docker-image:
     needs: test
